@@ -78,9 +78,7 @@ class ODEModel():
                 if not self.suppress_output: print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
             self.solution = solution
 
-
-        self.results_df = pd.DataFrame({"Time": times, "DrugConcentration": solution.y[-1, :],
-                              **dict(zip(self.state,solution.y))})
+        self.results_df = pd.DataFrame({"Time": times, **dict(zip(self.state,solution.y))})
         self.success = True if not encountered_problem else False
 
     # =========================================================================================
@@ -88,8 +86,7 @@ class ODEModel():
     def plot(self, ax=None, vars_to_plot = ['V'], decorate_axes=True, **kwargs):
         if ax is None: _, ax = plt.subplots(1, 1)
         model_df = pd.melt(self.results_df, id_vars=['Time'], value_vars=vars_to_plot)
-        ax.plot(model_df.Time, model_df.value, linewidth=5)
-
+        ax.plot(model_df.Time, model_df.value, **kwargs)
 
         # Format the plot
         ax.set_xlabel("Time (Days)" if decorate_axes else "")
