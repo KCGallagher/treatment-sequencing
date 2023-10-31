@@ -92,8 +92,8 @@ class ODEModel():
 
 
         # Format the plot
-        ax.set_xlabel("Time in Days" if decorate_axes else "")
-        ax.set_ylabel("Confluence" if decorate_axes else "")
+        ax.set_xlabel("Time (Days)" if decorate_axes else "")
+        ax.set_ylabel("Tumor Size" if decorate_axes else "")
         ax.set_title(kwargs.get('title', ''))
 
         plt.tight_layout()
