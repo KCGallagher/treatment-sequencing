@@ -1,0 +1,12 @@
+# System files
+.DS_Store
+*pycache*
+**/scratch
+**/tmp
+.idea
+*.key
+*.code-workspace
+*.vscode
+
+# Notebook metadata
+**/.ipynb_checkpoints
