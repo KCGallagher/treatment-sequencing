@@ -90,7 +90,7 @@ class ODEModel():
 
     # =========================================================================================
     # Function to plot the model predictions
-    def plot(self, ax=None, vars_to_plot = ['V'], decorate_axes=True, **kwargs):
+    def plot(self, ax=None, vars_to_plot = ['V'], decorate_axes=True, apply_tight_layout=True, **kwargs):
         if ax is None: _, ax = plt.subplots(1, 1)
         model_df = pd.melt(self.results_df, id_vars=['Time'], value_vars=vars_to_plot)
         ax.plot(model_df.Time, model_df.value, **kwargs)
@@ -100,7 +100,8 @@ class ODEModel():
         ax.set_ylabel("Tumor Size" if decorate_axes else "")
         ax.set_title(kwargs.get('title', ''))
 
-        plt.tight_layout()
+        if apply_tight_layout:
+            plt.tight_layout()
         if kwargs.get('saveFigB', False):
             plt.savefig(kwargs.get('outName', 'modelPrediction.png'), orientation='portrait', format='png')
             plt.close()
