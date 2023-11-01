@@ -32,37 +32,28 @@ class ODEModel():
     
     def model_eqns(self, t, state):
         return NotImplementedError
-
+    
     # =========================================================================================
-    # Function to simulate the model
-    def simulate(self, tmax, tmin=0, **kwargs):
-        # Allow configuring the solver at this point as well
-        self.dt = float(kwargs.get('dt', self.dt))  # Time resolution to return the model prediction on
-        self.abs_err = kwargs.get('abs_err', self.abs_err)  # Absolute error allowed for ODE solver
-        self.rel_err = kwargs.get('rel_err', self.rel_err)  # Relative error allowed for ODE solver
-        self.solver_method = kwargs.get('method', self.solver_method)  # ODE solver used
-        self.success = False  # Indicate successful solution of the ODE system
+    # Helper function to solve an ODE system
+    def _solve_ode(self, state, t_max, t_min=0, **kwargs):
+        self.solver_method = kwargs.get('method', self.solver_method)
         self.suppress_output = kwargs.get('suppress_output',
-                                          self.suppress_output)  # If true, suppress output of ODE solver (including warning messages)
-
+                                          self.suppress_output) 
+        # If true, suppress output of ODE solver (including warning messages)
+        
         # Solve
-        self.initial_state = [self.params[var + "0"] for var in self.state]
-        times = np.arange(tmin, tmax, self.dt)
+        times = np.arange(t_min, t_max, self.dt)
         state = self.initial_state
         
+        ode_input_args = {'y0': state, 't_span': (times[0], times[-1] + self.dt),
+                          't_eval': times,'method': self.solver_method,
+                          'atol': self.abs_err, 'rtol': self.rel_err,
+                          'max_step': kwargs.get('max_step', 1)}
         if self.suppress_output:
             with stdout_redirected():
-                solution = scipy.integrate.solve_ivp(self.model_eqns, y0=state,
-                                                    t_span=(times[0], times[-1] + self.dt), t_eval=times,
-                                                    method=self.solver_method,
-                                                    atol=self.abs_err, rtol=self.rel_err,
-                                                    max_step=kwargs.get('max_step', 1))
+                solution = scipy.integrate.solve_ivp(self.model_eqns, **ode_input_args)
         else:
-            solution = scipy.integrate.solve_ivp(self.model_eqns, y0=state,
-                                                t_span=(times[0], times[-1] + self.dt), t_eval=times,
-                                                method=self.solver_method,
-                                                atol=self.abs_err, rtol=self.rel_err,
-                                                max_step=kwargs.get('max_step', 1))
+            solution = scipy.integrate.solve_ivp(self.model_eqns, **ode_input_args)
         
         # Check that the solver converged
         encountered_problem = False
@@ -77,9 +68,25 @@ class ODEModel():
                     "Negative values encountered in the solution. Make the time step smaller or consider using a stiff solver.")
                 if not self.suppress_output: print("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
             self.solution = solution
-
-        self.results_df = pd.DataFrame({"Time": times, **dict(zip(self.state,solution.y))})
+            
         self.success = True if not encountered_problem else False
+        return pd.DataFrame({"Time": times, **dict(zip(self.state,solution.y))})
+
+    # =========================================================================================
+    # Function to simulate the model
+    def simulate(self, t_max, t_min=0, **kwargs):
+        # Allow configuring the solver at this point as well
+        self.dt = float(kwargs.get('dt', self.dt))  # Time resolution to return the model prediction on
+        self.abs_err = kwargs.get('abs_err', self.abs_err)  # Absolute error allowed for ODE solver
+        self.rel_err = kwargs.get('rel_err', self.rel_err)  # Relative error allowed for ODE solver
+        self.solver_method = kwargs.get('method', self.solver_method)  # ODE solver used
+        self.success = False  # Indicate successful solution of the ODE system
+        self.suppress_output = kwargs.get('suppress_output',
+                                          self.suppress_output)  # If true, suppress output of ODE solver (including warning messages)
+
+        # Solve
+        self.initial_state = [self.params[var + "0"] for var in self.state]
+        self.results_df = self._solve_ode(self.initial_state, t_max=t_max, t_min=t_min)
 
     # =========================================================================================
     # Function to plot the model predictions
