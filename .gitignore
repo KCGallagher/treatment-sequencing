@@ -10,3 +10,11 @@
 
 # Notebook metadata
 **/.ipynb_checkpoints
+
+# Bulk plots
+cycle_length*.png
+*resensitisation.png
+optimal_treatment_fractions_*.png
+
+# High res plots
+images/*.pdf
